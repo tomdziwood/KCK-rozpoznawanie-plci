@@ -1,10 +1,11 @@
 from __future__ import division
-from pylab import *
+import numpy as np
 from scipy import *
 import scipy.io.wavfile
+import matplotlib.pyplot as plt
 
 def main():
-    plik = scipy.io.wavfile.read('trainall/002_M.wav')
+    plik = scipy.io.wavfile.read('trainmy/005_K.wav')
     print("type(plik) = " + str(type(plik)))
     print("len(plik) = " + str(len(plik)))
 
@@ -16,7 +17,65 @@ def main():
     signal = plik[1]
     print("\ntype(signal) = " + str(type(signal)))
     print("len(signal) = " + str(len(signal)))
+    print("signal.shape = " + str(signal.shape))
     print("signal = " + str(signal))
+    signal = np.mean(signal, axis=1)
+    print("\ntype(signal) = " + str(type(signal)))
+    print("len(signal) = " + str(len(signal)))
+    print("signal.shape = " + str(signal.shape))
+    print("signal = " + str(signal))
+
+
+    iloscProbek = len(signal)
+    okresProbkowania = 1 / czestotliwoscProbkowania
+    #czas = np.arange(0, liczbaPrzebiegow * okres, okresProbkowania)
+    czas = np.arange(0, iloscProbek)
+    czas = czas / czestotliwoscProbkowania
+
+
+    print("\nTrwa rysowanie wykresu w dziedzinie czasu...")
+    fig = plt.figure(figsize=(15, 6), dpi=80)
+
+    ax = fig.add_subplot(121)
+    plt.xlabel("Czas [s]", fontsize=13)
+    plt.ylabel("Amplituda", fontsize=13)
+    ax.plot(czas, signal, '-')
+    print("Narysowano!")
+
+
+    # sygnal w dziedzinie czestotliwosci
+    signalHz = fft(signal)
+
+    # modul sygnalu
+    signalHz = abs(signalHz)
+
+    # normalizacja:
+    # dzielenie przez (ilość próbek/2)
+    signalHz /= (iloscProbek / 2)
+    # dzielenie wartosci dla 0Hz jeszce przez 2:
+    signalHz[0] /= 2
+
+    # ustawienie wartosci na osi x
+    freqs = np.arange(0, iloscProbek)
+    print(freqs)
+    print("min(freqs) = " + str(min(freqs)))
+    print("max(freqs) = " + str(max(freqs)))
+    freqs = freqs / iloscProbek * czestotliwoscProbkowania
+    print(freqs)
+    print("min(freqs) = " + str(min(freqs)))
+    print("max(freqs) = " + str(max(freqs)))
+
+    print("\nTrwa rysowanie wykresu w dziedzinie częstotliwości...")
+    print("len(signalHz[::200] = " + str(len(signalHz[::200])))
+    ax = fig.add_subplot(122)
+    plt.xlabel("Częstotliwość [Hz]", fontsize=13)
+    plt.ylabel("Amplituda", fontsize=13)
+    ax.stem(freqs[::200], signalHz[::200], '-*')
+    print("Narysowano!")
+
+    plt.show()
+
+
 
 
 
