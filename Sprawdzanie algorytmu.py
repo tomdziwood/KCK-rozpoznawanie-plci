@@ -1,148 +1,154 @@
 from __future__ import division
 import numpy as np
 from scipy import *
+import scipy.signal
 import scipy.io.wavfile
 import matplotlib.pyplot as plt
 
-def main():
-    plik = scipy.io.wavfile.read('trainmy/005_K.wav')
-    print("type(plik) = " + str(type(plik)))
-    print("len(plik) = " + str(len(plik)))
-
-    czestotliwoscProbkowania = plik[0]
-    print("\ntype(czestotliwoscProbkowania) = " + str(type(czestotliwoscProbkowania)))
-    #print("len(signal) = " + str(len(signal)))
-    print("czestotliwoscProbkowania = " + str(czestotliwoscProbkowania))
-
-    signal = plik[1]
-    print("\ntype(signal) = " + str(type(signal)))
-    print("len(signal) = " + str(len(signal)))
-    print("signal.shape = " + str(signal.shape))
-    print("signal = " + str(signal))
-    signal = np.mean(signal, axis=1)
-    print("\ntype(signal) = " + str(type(signal)))
-    print("len(signal) = " + str(len(signal)))
-    print("signal.shape = " + str(signal.shape))
-    print("signal = " + str(signal))
 
 
-    iloscProbek = len(signal)
-    okresProbkowania = 1 / czestotliwoscProbkowania
-    #czas = np.arange(0, liczbaPrzebiegow * okres, okresProbkowania)
-    czas = np.arange(0, iloscProbek)
-    czas = czas / czestotliwoscProbkowania
+def rysujKrok(czas, sygnal, freqs, sygnalHz, krok=200, tytul=''):
+    fig = plt.figure(figsize=(20, 12), dpi=80)
+    fig.suptitle(tytul, fontsize=15)
 
-
-    print("\nTrwa rysowanie wykresu w dziedzinie czasu...")
-    fig = plt.figure(figsize=(15, 6), dpi=80)
-
-    ax = fig.add_subplot(121)
+    # print("\nTrwa rysowanie wykresu w dziedzinie czasu...")
+    ax = fig.add_subplot(211)
     plt.xlabel("Czas [s]", fontsize=13)
     plt.ylabel("Amplituda", fontsize=13)
-    ax.plot(czas, signal, '-')
-    print("Narysowano!")
+    ax.plot(czas, sygnal, '-')
 
-
-    # sygnal w dziedzinie czestotliwosci
-    signalHz = fft(signal)
-
-    # modul sygnalu
-    signalHz = abs(signalHz)
-
-    # normalizacja:
-    # dzielenie przez (ilość próbek/2)
-    signalHz /= (iloscProbek / 2)
-    # dzielenie wartosci dla 0Hz jeszce przez 2:
-    signalHz[0] /= 2
-
-    # ustawienie wartosci na osi x
-    freqs = np.arange(0, iloscProbek)
-    print(freqs)
-    print("min(freqs) = " + str(min(freqs)))
-    print("max(freqs) = " + str(max(freqs)))
-    freqs = freqs / iloscProbek * czestotliwoscProbkowania
-    print(freqs)
-    print("min(freqs) = " + str(min(freqs)))
-    print("max(freqs) = " + str(max(freqs)))
-
-    print("\nTrwa rysowanie wykresu w dziedzinie częstotliwości...")
-    print("len(signalHz[::200] = " + str(len(signalHz[::200])))
-    ax = fig.add_subplot(122)
+    # print("Trwa rysowanie wykresu w dziedzinie częstotliwości...")
+    ax = fig.add_subplot(212)
     plt.xlabel("Częstotliwość [Hz]", fontsize=13)
     plt.ylabel("Amplituda", fontsize=13)
-    ax.stem(freqs[::200], signalHz[::200], '-*')
-    print("Narysowano!")
+    ax.stem(freqs[::krok], sygnalHz[::krok], '-*')
+
+    plt.show()
+
+
+
+def rysuj(czas, sygnal, freqs, sygnalHz, tytul=''):
+    fig = plt.figure(figsize=(20, 12), dpi=80)
+    fig.suptitle(tytul, fontsize=15)
+
+    # print("\nTrwa rysowanie wykresu w dziedzinie czasu...")
+    ax = fig.add_subplot(211)
+    plt.xlabel("Czas [s]", fontsize=13)
+    plt.ylabel("Amplituda", fontsize=13)
+    ax.plot(czas, sygnal, '-')
+
+    # print("Trwa rysowanie wykresu w dziedzinie częstotliwości...")
+    ax = fig.add_subplot(212)
+    plt.xlabel("Częstotliwość [Hz]", fontsize=13)
+    plt.ylabel("Amplituda", fontsize=13)
+    ilePunktow = sum(freqs < 2000)
+    ax.plot(freqs[:ilePunktow], sygnalHz[:ilePunktow], '-')
 
     plt.show()
 
 
 
 
+def main():
+    tytulPliku = 'trainall/002_M.wav'
+    plik = scipy.io.wavfile.read(tytulPliku)
+    # print("type(plik) = " + str(type(plik)))
+    # print("len(plik) = " + str(len(plik)))
+
+    czestotliwoscProbkowania = plik[0]
+    # print("\ntype(czestotliwoscProbkowania) = " + str(type(czestotliwoscProbkowania)))
+    # #print("len(sygnal) = " + str(len(sygnal)))
+    # print("czestotliwoscProbkowania = " + str(czestotliwoscProbkowania))
+
+    sygnal = plik[1]
+    # print("\ntype(sygnal) = " + str(type(sygnal)))
+    print("len(sygnal) = " + str(len(sygnal)))
+    # print("sygnal.shape = " + str(sygnal.shape))
+    # print("sygnal = " + str(sygnal))
+    sygnal = np.mean(sygnal, axis=1)
+    dlugoscSygnalu = len(sygnal)
+    # print("\ntype(sygnal) = " + str(type(sygnal)))
+    # print("len(sygnal) = " + str(len(sygnal)))
+    # print("sygnal.shape = " + str(sygnal.shape))
+    # print("sygnal = " + str(sygnal))
+    absoluteSygnal = np.abs(sygnal)
+    mediana = np.median(absoluteSygnal)
+    print("mediana = " + str(mediana))
+    percentyl = np.percentile(absoluteSygnal, 95)
+    print("percentyl = " + str(percentyl))
 
 
-    """
-    okres = 1 / czestotliwosc
-    okresProbkowania = 1 / czestotliwoscProbkowania
+    iloscProbek = dlugoscSygnalu
+    czas = np.arange(0, iloscProbek)
+    czas = czas / czestotliwoscProbkowania
 
-    t = np.arange(0, liczbaPrzebiegow * okres, okresProbkowania)
-    # generujemy momenty, w których pobieramy próbki
 
-    n = len(t)
-    # ilość próbek
-
-    FUNC = lambda t: amplituda * sin(2 * pi * t * czestotliwosc)
-    # def. funkcji (tutaj sinus)
-
-    signal = FUNC(t)
-    # funkcja sprobkowana
-
-    fig = plt.figure(figsize=(15, 6), dpi=80)
-    ax = fig.add_subplot(121)
-    xlabel("Czas [s]", fontsize=13)
-    ylabel("Amplituda", fontsize=13)
-
-    ## --- POMOCNICZY SYGNAL
-    base_t = np.arange(0, liczbaPrzebiegow * okres, 1.0 / 200.0)
-    base_signal = FUNC(base_t)
-    ax.plot(base_t, base_signal, linestyle='-', color='red')
-    ax.set_ylim([min(base_signal), max(base_signal)])
-    ## ---
-
-    ax.plot(t, signal, 'o')
-
-    signal1 = fft(signal)
     # sygnal w dziedzinie czestotliwosci
-    signal1 = abs(signal1)
+    sygnalHz = fft(sygnal)
+
     # modul sygnalu
+    sygnalHz = abs(sygnalHz)
 
     # normalizacja:
     # dzielenie przez (ilość próbek/2)
-    signal1 /= (n / 2)
+    sygnalHz /= (iloscProbek / 2)
     # dzielenie wartosci dla 0Hz jeszce przez 2:
-    signal1[0] /= 2
+    sygnalHz[0] /= 2
 
     # ustawienie wartosci na osi x
-    freqs = np.arange(0, n)
-    freqs = freqs * czestotliwoscProbkowania / n
-    # freqs = list(range(n))
-    # for i in range(len(freqs)):
-    #    freqs[i] = i * czestotliwoscProbkowania / n
+    freqs = np.arange(0, iloscProbek)
+    # print(freqs)
+    # print("min(freqs) = " + str(min(freqs)))
+    # print("max(freqs) = " + str(max(freqs)))
+    freqs = freqs / iloscProbek * czestotliwoscProbkowania
+    # print(freqs)
+    # print("min(freqs) = " + str(min(freqs)))
+    # print("max(freqs) = " + str(max(freqs)))
 
-    # nie rysowanie slupków bliskich zero
-    signal1[signal1 < 1 / 1000000] = 0
-    freqs[signal1 == 0] = 0
+    rysujKrok(czas, sygnal, freqs, sygnalHz)
 
-    ax = fig.add_subplot(122)
-    xlabel("Częstotliwość [Hz]", fontsize=13)
-    ylabel("Amplituda", fontsize=13)
-    ymax = max(signal1)
-    if (ymax > 3.0):
-        ax.set_ylim([0.0, ymax])
-    else:
-        ax.set_ylim([0.0, 3.0])
-    stem(freqs, signal1, '-*')
 
-    show()
-    """
+    flaga = absoluteSygnal >= percentyl
+    print(flaga)
+    print("sum(flaga) = " + str(sum(flaga)))
+
+    indeksy = np.where(flaga)[0]
+    print("indeksy = " + str(indeksy))
+
+    fragmentSzerokosc = int(czestotliwoscProbkowania / 10)
+    # fragmentSzerokosc = czestotliwoscProbkowania
+
+    oknoKaisera = kaiser(fragmentSzerokosc, 5)
+    # print("len(oknoKaisera) = " + str(len(oknoKaisera)))
+    # print("min(oknoKaisera) = " + str(min(oknoKaisera)))
+    # print("max(oknoKaisera) = " + str(max(oknoKaisera)))
+
+
+    i = 1
+    while((i <= 20) and (len(indeksy) > 0) and (indeksy[0] + fragmentSzerokosc < dlugoscSygnalu)):
+        indeksPoczatek = indeksy[0]
+        indeksKoniec = indeksPoczatek + fragmentSzerokosc
+
+        fragmentSygnal = sygnal[indeksPoczatek : indeksKoniec]
+        fragmentSygnal *= oknoKaisera
+        fragmentCzas = czas[indeksPoczatek : indeksKoniec]
+
+        iloscProbek = fragmentSzerokosc
+        sygnalHz = fft(fragmentSygnal)
+        sygnalHz = abs(sygnalHz)
+        sygnalHz /= (iloscProbek / 2)
+        sygnalHz[0] /= 2
+        freqs = np.arange(0, iloscProbek)
+        freqs = freqs / iloscProbek * czestotliwoscProbkowania
+
+        tytulWykresu = tytulPliku + " - fragment " + str(i)
+        print("\t" + tytulWykresu + "\t[" + str(indeksPoczatek) + ", " + str(indeksKoniec) + "]")
+        rysuj(fragmentCzas, fragmentSygnal, freqs, sygnalHz, tytul=tytulWykresu)
+
+        indeksy = indeksy[indeksy >= indeksKoniec]
+        i += 1
+
+
+
 
 main()
