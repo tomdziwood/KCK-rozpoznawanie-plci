@@ -45,9 +45,9 @@ def rysuj(czas, sygnal, freqs, sygnalHz, tytul=''):
     ilePunktow = sum(freqs < 2000)
     ax.plot(freqs[:ilePunktow], sygnalHz[:ilePunktow], '-')
 
-    plt.show()
-    #print("\tTrwa zapisywanie do pliku jpg...")
-    #fig.savefig('./wyniki/' + tytul[11:] + '.jpg')
+    #plt.show()
+    print("\tTrwa zapisywanie do pliku jpg...")
+    fig.savefig('./wyniki/' + tytul[15:] + '.jpg')
     plt.close()
 
 
@@ -71,7 +71,7 @@ def rysujZle(czas, sygnal, freqs, sygnalHz, tytul=''):
 
     #plt.show()
     print("\tTrwa zapisywanie do pliku jpg...")
-    fig.savefig('./zle/' + tytul[11:] + '.jpg')
+    fig.savefig('./zle/' + tytul[15:] + '.jpg')
     plt.close()
 
 
@@ -84,7 +84,9 @@ def main():
     bledy = 0
     licznikRemisow = 0
     dobre = 0
-    sciezkaZrodlowa = './trainall/'
+    #sciezkaZrodlowa = 'trainall/'
+    #sciezkaZrodlowa = 'trainmy/'
+    sciezkaZrodlowa = 'probki_dzwieku/'
     tytulyPlikow = os.listdir(sciezkaZrodlowa)
     #print(tytulyPlikow)
     #for iTytul in range(len(tytulyPlikow))[1:]:
@@ -216,11 +218,11 @@ def main():
 
             if(maxMalySygnalHz / maxFragmentSygnal < 0.075):
                 i = i
-                #print("\t" + tytulWykresu + "\t[" + str(indeksPoczatek) + ", " + str(indeksKoniec) + ") - zle")
-                #rysujZle(fragmentCzas, fragmentSygnal, freqs, sygnalHz, tytul=tytulWykresu)
+                print("\t" + tytulWykresu + "\t[" + str(indeksPoczatek) + ", " + str(indeksKoniec) + ") - zle")
+                rysujZle(fragmentCzas, fragmentSygnal, freqs, sygnalHz, tytul=tytulWykresu)
             else:
 
-                #print("\t" + tytulWykresu + "\t[" + str(indeksPoczatek) + ", " + str(indeksKoniec) + ") - dobre")
+                print("\t" + tytulWykresu + "\t[" + str(indeksPoczatek) + ", " + str(indeksKoniec) + ") - dobre")
                 i += 1
 
                 #dominujacaCzestotliwosc = malyFreqs[np.argmax(malySygnalHz)]
@@ -244,7 +246,7 @@ def main():
                     else:
                         kobieta += 1
 
-                #rysuj(fragmentCzas, fragmentSygnal, freqs, sygnalHz, tytul=tytulWykresu)
+                rysuj(fragmentCzas, fragmentSygnal, freqs, sygnalHz, tytul=tytulWykresu)
 
 
             indeksy = indeksy[indeksy >= indeksKoniec]
