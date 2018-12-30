@@ -202,14 +202,15 @@ def main():
                 malySygnalHz = sygnalHz[malyIndeksPoczatek : malyIndeksKoniec]
                 malyFreqs = freqs[malyIndeksPoczatek : malyIndeksKoniec]
 
-                maxFragmentSygnal = max(fragmentSygnal)
+                #maxFragmentSygnal = max(fragmentSygnal)
+                maxFragmentSygnal = max(np.abs(fragmentSygnal))
                 maxMalySygnalHz = max(malySygnalHz)
 
 
                 tytulWykresu = tytulPliku[:-4] + " - fragment " + str(proba)
 
 
-                if(maxMalySygnalHz / maxFragmentSygnal < 0.1):
+                if(maxMalySygnalHz / maxFragmentSygnal < 0.075):
                     i = i
                     #print("\t" + tytulWykresu + "\t[" + str(indeksPoczatek) + ", " + str(indeksKoniec) + ") - zle")
                     #rysujZle(fragmentCzas, fragmentSygnal, freqs, sygnalHz, tytul=tytulWykresu)
