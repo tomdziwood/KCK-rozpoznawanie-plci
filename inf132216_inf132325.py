@@ -1,89 +1,97 @@
 from __future__ import division
-from pylab import *
+import numpy as np
 from scipy import *
+import scipy.signal
 import scipy.io.wavfile
+import sys
+
 
 def main():
-    plik = scipy.io.wavfile.read('trainall/002_M.wav')
-    print("type(plik) = " + str(type(plik)))
-    print("len(plik) = " + str(len(plik)))
+    wynik = 'K'
+    try:
+        tytulPliku = sys.argv[1]
+        plik = scipy.io.wavfile.read(tytulPliku)
 
-    czestotliwoscProbkowania = plik[0]
-    print("\ntype(czestotliwoscProbkowania) = " + str(type(czestotliwoscProbkowania)))
-    #print("len(signal) = " + str(len(signal)))
-    print("czestotliwoscProbkowania = " + str(czestotliwoscProbkowania))
+        czestotliwoscProbkowania = plik[0]
 
-    signal = plik[1]
-    print("\ntype(signal) = " + str(type(signal)))
-    print("len(signal) = " + str(len(signal)))
-    print("signal = " + str(signal))
+        sygnal = plik[1]
+        if (len(sygnal.shape) > 1):
+            sygnal = np.mean(sygnal, axis=1)
+
+        dlugoscSygnalu = len(sygnal)
+        absolutnySygnal = np.abs(sygnal)
+        percentyl = np.percentile(absolutnySygnal, 95)  # wartość amplitudy, dla której uznawane jest trwanie głosu
+
+        iloscProbek = dlugoscSygnalu
+        czas = np.arange(0, iloscProbek)
+        czas = czas / czestotliwoscProbkowania
+
+        flaga = absolutnySygnal >= percentyl
+        indeksy = np.where(flaga)[0]    # tablica zawiera indeksy wskazujace na miejsca, gdzie przekroczona jest wartość 'percentyl'
+
+        fragmentSzerokosc = int(czestotliwoscProbkowania / 10)  # długość badanego fragmentu będzie wynosić 0.1 sekundy
+        oknoKaisera = kaiser(fragmentSzerokosc, 5)
+
+        kobieta = 0
+        mezczyzna = 0
+        i = 1
+        proba = 1
+        while ((i <= 20) and (len(indeksy) > 0) and (indeksy[0] + fragmentSzerokosc < dlugoscSygnalu)):
+            indeksPoczatek = indeksy[0]
+            indeksKoniec = indeksPoczatek + fragmentSzerokosc
+
+            fragmentSygnal = np.zeros((fragmentSzerokosc))
+            fragmentSygnal += sygnal[indeksPoczatek: indeksKoniec]
+            fragmentSygnal *= oknoKaisera
+
+            iloscProbek = fragmentSzerokosc
+            sygnalHz = fft(fragmentSygnal)
+            sygnalHz = abs(sygnalHz)
+            sygnalHz /= (iloscProbek / 2)
+            sygnalHz[0] /= 2
+            freqs = np.arange(0, iloscProbek)
+            freqs = freqs / iloscProbek * czestotliwoscProbkowania
+
+            malyIndeksPoczatek = sum(freqs < 50)
+            malyIndeksKoniec = sum(freqs < 1000)
+            malySygnalHz = sygnalHz[malyIndeksPoczatek: malyIndeksKoniec]
+            malyFreqs = freqs[malyIndeksPoczatek: malyIndeksKoniec]
+
+            maxFragmentSygnal = max(fragmentSygnal)
+            maxMalySygnalHz = max(malySygnalHz)
+
+            # dany fragment jest odpowiedni do zbadania, jeśli największa amplituda w dziedzinie częstotliwości
+            # jest odpowiednio nie mała w stosunku do amplitudy fragmentu w dziedzinie czasu
+            if (maxMalySygnalHz / maxFragmentSygnal >= 0.1):
+                i += 1
+                j = 1
+                # wyszukiwanie momentu, w którym następuje znaczący wzrost amplitudy
+                while ((j < len(malySygnalHz)) and (malySygnalHz[j] - malySygnalHz[j - 1] < 0.09 * maxMalySygnalHz)):
+                    j += 1
+
+                if (j < len(malySygnalHz)):
+                    if (malyFreqs[j] < 160):
+                        mezczyzna += 1
+                    else:
+                        kobieta += 1
+
+            indeksy = indeksy[indeksy >= indeksKoniec]
+            proba += 1
 
 
+        if (mezczyzna > kobieta):
+            wynik = 'M'
+        else:
+            wynik = 'K'
 
+    except ValueError:
+        # Łapanie wyjatku związanego z problemami z odczytywaniem pliku .wav
+        wynik = 'K'
+    except Exception:
+        # Łapanie wyjatku jakiegokolwiek, no niestety...
+        wynik = 'K'
 
-    """
-    okres = 1 / czestotliwosc
-    okresProbkowania = 1 / czestotliwoscProbkowania
+    print(wynik)
 
-    t = np.arange(0, liczbaPrzebiegow * okres, okresProbkowania)
-    # generujemy momenty, w których pobieramy próbki
-
-    n = len(t)
-    # ilość próbek
-
-    FUNC = lambda t: amplituda * sin(2 * pi * t * czestotliwosc)
-    # def. funkcji (tutaj sinus)
-
-    signal = FUNC(t)
-    # funkcja sprobkowana
-
-    fig = plt.figure(figsize=(15, 6), dpi=80)
-    ax = fig.add_subplot(121)
-    xlabel("Czas [s]", fontsize=13)
-    ylabel("Amplituda", fontsize=13)
-
-    ## --- POMOCNICZY SYGNAL
-    base_t = np.arange(0, liczbaPrzebiegow * okres, 1.0 / 200.0)
-    base_signal = FUNC(base_t)
-    ax.plot(base_t, base_signal, linestyle='-', color='red')
-    ax.set_ylim([min(base_signal), max(base_signal)])
-    ## ---
-
-    ax.plot(t, signal, 'o')
-
-    signal1 = fft(signal)
-    # sygnal w dziedzinie czestotliwosci
-    signal1 = abs(signal1)
-    # modul sygnalu
-
-    # normalizacja:
-    # dzielenie przez (ilość próbek/2)
-    signal1 /= (n / 2)
-    # dzielenie wartosci dla 0Hz jeszce przez 2:
-    signal1[0] /= 2
-
-    # ustawienie wartosci na osi x
-    freqs = np.arange(0, n)
-    freqs = freqs * czestotliwoscProbkowania / n
-    # freqs = list(range(n))
-    # for i in range(len(freqs)):
-    #    freqs[i] = i * czestotliwoscProbkowania / n
-
-    # nie rysowanie slupków bliskich zero
-    signal1[signal1 < 1 / 1000000] = 0
-    freqs[signal1 == 0] = 0
-
-    ax = fig.add_subplot(122)
-    xlabel("Częstotliwość [Hz]", fontsize=13)
-    ylabel("Amplituda", fontsize=13)
-    ymax = max(signal1)
-    if (ymax > 3.0):
-        ax.set_ylim([0.0, ymax])
-    else:
-        ax.set_ylim([0.0, 3.0])
-    stem(freqs, signal1, '-*')
-
-    show()
-    """
 
 main()
