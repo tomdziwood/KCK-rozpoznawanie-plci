@@ -88,10 +88,10 @@ def main():
     tytulyPlikow = os.listdir(sciezkaZrodlowa)
     #print(tytulyPlikow)
     #for iTytul in range(len(tytulyPlikow))[1:]:
-    #for iTytul in range(len(tytulyPlikow)):
+    for iTytul in range(len(tytulyPlikow)):
     #for iTytul in [9, 34, 38, 44, 52, 66, 83, 86]:
     #for iTytul in [0, 1, 2]:
-    for iTytul in [43]:
+    #for iTytul in [43]:
         #try:
         tytulPliku = sciezkaZrodlowa + tytulyPlikow[iTytul]
         # print("Probuje otworzyć: " + tytulPliku)
@@ -205,8 +205,8 @@ def main():
             #maxFragmentSygnal = max(fragmentSygnal)
             maxFragmentSygnal = max(np.abs(fragmentSygnal))
             maxMalySygnalHz = max(malySygnalHz)
-            print("maxMalySygnalHz = " + str(maxMalySygnalHz))
-            print("maxFragmentSygnal = " + str(maxFragmentSygnal))
+            # print("maxMalySygnalHz = " + str(maxMalySygnalHz))
+            # print("maxFragmentSygnal = " + str(maxFragmentSygnal))
 
 
 

@@ -1,8 +1,7 @@
 from __future__ import division
 import numpy as np
 from scipy import *
-import scipy.signal
-import scipy.io.wavfile
+import soundfile as sf
 import sys
 
 
@@ -10,21 +9,17 @@ def main():
     wynik = 'K'
     try:
         tytulPliku = sys.argv[1]
-        plik = scipy.io.wavfile.read(tytulPliku)
+        plik = sf.read(tytulPliku)
 
-        czestotliwoscProbkowania = plik[0]
+        czestotliwoscProbkowania = plik[1]
 
-        sygnal = plik[1]
+        sygnal = plik[0]
         if (len(sygnal.shape) > 1):
             sygnal = np.mean(sygnal, axis=1)
 
         dlugoscSygnalu = len(sygnal)
         absolutnySygnal = np.abs(sygnal)
         percentyl = np.percentile(absolutnySygnal, 95)  # wartość amplitudy, dla której uznawane jest trwanie głosu
-
-        iloscProbek = dlugoscSygnalu
-        czas = np.arange(0, iloscProbek)
-        czas = czas / czestotliwoscProbkowania
 
         flaga = absolutnySygnal >= percentyl
         indeksy = np.where(flaga)[0]    # tablica zawiera indeksy wskazujace na miejsca, gdzie przekroczona jest wartość 'percentyl'
@@ -57,12 +52,12 @@ def main():
             malySygnalHz = sygnalHz[malyIndeksPoczatek: malyIndeksKoniec]
             malyFreqs = freqs[malyIndeksPoczatek: malyIndeksKoniec]
 
-            maxFragmentSygnal = max(fragmentSygnal)
+            maxFragmentSygnal = max(np.abs(fragmentSygnal))
             maxMalySygnalHz = max(malySygnalHz)
 
             # dany fragment jest odpowiedni do zbadania, jeśli największa amplituda w dziedzinie częstotliwości
             # jest odpowiednio nie mała w stosunku do amplitudy fragmentu w dziedzinie czasu
-            if (maxMalySygnalHz / maxFragmentSygnal >= 0.1):
+            if (maxMalySygnalHz / maxFragmentSygnal >= 0.075):
                 i += 1
                 j = 1
                 # wyszukiwanie momentu, w którym następuje znaczący wzrost amplitudy
